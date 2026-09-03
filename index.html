@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>8x8 / Callswitch One System Setup Configuration | Zest4</title>
+<title>Phone System Setup Configuration Form | Zest4</title>
 <link rel="icon" href="https://i0.wp.com/zest4.com/wp-content/uploads/2018/10/cropped-4-site-icon.png?fit=32%2C32&ssl=1">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 /* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -98,6 +99,31 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 .add-btn{font-size:13px;color:var(--green);border:1.5px dashed #8dd494;background:transparent;padding:8px 14px;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:6px;margin-top:12px;font-weight:500}
 .add-btn:hover{background:var(--green-light)}
 .mainNav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;gap:12px}
+
+/* ── Upload gate ── */
+.gate-hero{background:linear-gradient(135deg,#0f1929 0%,#162540 50%,#0f1929 100%);border-bottom:3px solid var(--green);padding:44px 24px 40px}
+.gate-hero-inner{max-width:560px;margin:0 auto;text-align:center}
+.gate-hero .hero-pill{display:inline-flex;align-items:center;gap:7px;background:rgba(58,181,74,0.12);border:1px solid rgba(58,181,74,0.3);border-radius:20px;padding:5px 16px;font-size:12px;color:#6ee07a;font-weight:500;margin-bottom:18px}
+.gate-hero h1{font-size:26px;font-weight:700;color:#fff;line-height:1.25;margin-bottom:10px}
+.gate-hero p{font-size:14px;color:#8a96b4}
+.gate-content{flex:1;padding:32px 24px 60px}
+.gate-wrap{max-width:560px;margin:0 auto}
+.gate-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center}
+.gate-card i.gate-icon{font-size:30px;color:var(--green);margin-bottom:10px;display:block}
+.gate-card h2{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
+.gate-card p{font-size:13px;color:var(--muted);margin-bottom:1.1rem}
+.gate-divider{display:flex;align-items:center;gap:12px;margin:1.25rem 0;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.gate-divider::before,.gate-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.file-drop{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.file-drop:hover{border-color:var(--green);background:var(--green-light)}
+.file-drop i{font-size:22px;color:var(--green);display:block;margin-bottom:6px}
+.file-drop span{font-size:13px;color:var(--muted)}
+.file-drop .fname{color:var(--text);font-weight:600}
+.gate-status{font-size:12.5px;margin-top:10px;border-radius:var(--radius);padding:9px 12px;display:none;text-align:left;line-height:1.5}
+.gate-status.show{display:block}
+.gate-status.info{background:var(--green-light);color:var(--green-dark);border:1px solid #b6e5bc}
+.gate-status.error{background:#fdecea;color:#b3261e;border:1px solid #f6c6c2}
+.gate-status.loading{background:#eef1f6;color:var(--muted);border:1px solid var(--border2)}
 
 /* ── Steps ── */
 .step{display:none}.step.active{display:block}
@@ -196,41 +222,45 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
 <body>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- UTILITY BAR                               -->
+<!-- UPLOAD GATE                                -->
 <!-- ══════════════════════════════════════════ -->
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="topbar-left">
-      <span class="topbar-phone"><i class="ti ti-phone"></i><a href="tel:+441619563300">0161 956 3300</a></span>
-      <a href="https://zest4.com/log-a-fault/">Log a Fault</a>
-      <a href="https://zest4.com/service-status/">Service Status</a>
+<div id="gateScreen">
+  <div class="gate-hero">
+    <div class="gate-hero-inner">
+      <div class="hero-pill"><i class="ti ti-phone-call"></i>Cloud Telephony Setup</div>
+      <h1>Phone System Setup<br>Configuration Form</h1>
+      <p>Start a new configuration, or pick up an existing one by uploading a PDF you've already exported from this form.</p>
     </div>
-    <div class="topbar-right">
-      <a href="https://portal.zest4partners.com/">Partner Portal</a>
-      <a href="https://www.zest4customers.com/">Customer Portal</a>
-      <a href="https://zest4connect.com/login.htm">Zest4 Connect</a>
+  </div>
+  <div class="gate-content">
+    <div class="gate-wrap">
+      <div class="gate-card">
+        <i class="ti ti-file-upload gate-icon"></i>
+        <h2>Continue an existing configuration</h2>
+        <p>Upload a PDF previously exported from this form and we'll load your answers back in so you can pick up where you left off.</p>
+        <label class="file-drop" for="gatePdfInput" id="gateDropLabel">
+          <i class="ti ti-cloud-upload"></i>
+          <span id="gateDropText">Click to choose a PDF, or drag one here</span>
+        </label>
+        <input type="file" id="gatePdfInput" accept="application/pdf" style="display:none" onchange="handleGatePdfSelect(this)">
+        <div class="gate-status" id="gateStatus"></div>
+        <button class="btn primary" id="gateLoadBtn" style="width:100%;justify-content:center;margin-top:12px;display:none" onclick="loadGatePdf()"><i class="ti ti-upload"></i>Load & continue</button>
+      </div>
+      <div class="gate-divider">or</div>
+      <div class="gate-card">
+        <i class="ti ti-file-plus gate-icon"></i>
+        <h2>Start a new configuration</h2>
+        <p>Fill the form out from scratch. Takes around 5 minutes.</p>
+        <button class="btn primary" style="width:100%;justify-content:center" onclick="startNewConfig()">Start new configuration <i class="ti ti-arrow-right"></i></button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════ -->
-<!-- MAIN NAV                                  -->
+<!-- FORM SCREEN (hero + wizard)                -->
 <!-- ══════════════════════════════════════════ -->
-<nav class="mainnav">
-  <div class="mainnav-inner">
-    <a href="https://zest4.com/" class="nav-logo">
-      <img src="https://zest4.com/wp-content/uploads/2018/10/Zest4-Logo-New.svg" alt="Zest4">
-    </a>
-    <ul class="nav-links">
-      <li><a href="https://zest4.com/business-mobile/">Business Mobile</a></li>
-      <li><a href="https://zest4.com/cloud-telephony/">Cloud Telephony</a></li>
-      <li><a href="https://zest4.com/iot/">IoT &amp; Data</a></li>
-      <li><a href="https://zest4.com/about/">About Us</a></li>
-      <li><a href="https://zest4.com/contact/">Contact</a></li>
-      <li><a href="https://zest4.com/become-a-partner/" class="nav-cta">Become a Partner</a></li>
-    </ul>
-  </div>
-</nav>
+<div id="formScreen" style="display:none">
 
 <!-- ══════════════════════════════════════════ -->
 <!-- HERO BANNER                               -->
@@ -238,7 +268,7 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
 <div class="hero">
   <div class="hero-inner">
     <div class="hero-pill"><i class="ti ti-phone-call"></i>Cloud Telephony Setup</div>
-    <h1>8x8 / Callswitch One<br>System Setup Configuration</h1>
+    <h1>Phone System Setup<br>Configuration Form</h1>
     <p>Complete the form below to tell us how you'd like your phone system configured. Takes around 5 minutes.</p>
     <div class="progress-bar" id="progBar"></div>
     <div class="step-label" id="stepLabel"></div>
@@ -452,57 +482,15 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
 </div><!-- /wrap -->
 </div><!-- /content -->
 
-<!-- ══════════════════════════════════════════ -->
-<!-- FOOTER                                    -->
-<!-- ══════════════════════════════════════════ -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <img src="https://zest4.com/wp-content/uploads/2018/10/Zest4-Logo-New.svg" alt="Zest4">
-        <p>UK-based wholesale telecoms provider offering mobile, IoT, cloud telephony and unified communications solutions for resellers.</p>
-        <div class="phone"><i class="ti ti-phone"></i><a href="tel:+441619563300">0161 956 3300</a></div>
-      </div>
-      <div class="footer-col">
-        <h4>Products</h4>
-        <a href="https://zest4.com/business-mobile/">Business Mobile</a>
-        <a href="https://zest4.com/cloud-telephony/">Cloud Telephony</a>
-        <a href="https://zest4.com/iot/">IoT &amp; Mobile Data</a>
-        <a href="https://zest4.com/bulk-sms/">Bulk SMS</a>
-        <a href="https://zest4.com/pci-compliance/">PCI Compliance</a>
-      </div>
-      <div class="footer-col">
-        <h4>Company</h4>
-        <a href="https://zest4.com/about/">About Us</a>
-        <a href="https://zest4.com/meet-the-team/">Meet the Team</a>
-        <a href="https://zest4.com/awards-and-recognition/">Awards</a>
-        <a href="https://zest4.com/news/">News &amp; Blog</a>
-        <a href="https://zest4.com/careers/">Careers</a>
-        <a href="https://zest4.com/sustainability/">Sustainability</a>
-      </div>
-      <div class="footer-col">
-        <h4>Support</h4>
-        <a href="https://zest4.com/log-a-fault/">Log a Fault</a>
-        <a href="https://zest4.com/service-status/">Service Status</a>
-        <a href="https://www.zest4customers.com/">Customer Portal</a>
-        <a href="https://portal.zest4partners.com/">Partner Portal</a>
-        <a href="https://zest4connect.com/login.htm">Zest4 Connect</a>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2025 Zest4 Ltd. All rights reserved.</span>
-      <div>
-        <a href="https://zest4.com/privacy-policy/">Privacy Policy</a>
-        <a href="https://zest4.com/contact/">Contact Us</a>
-      </div>
-    </div>
-  </div>
-</footer>
+</div><!-- /formScreen -->
 
 <script>
 const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const SNAMES=['Company details','Phone numbers','Users','Ring groups','Auto attendant','Additional settings'];
 var cur=0,users=[],rgs=[],cqs=[],aas=[],nextUserId=1,nextRgId=1,nextCqId=1,nextAaId=1,nextAaOptId=1,_pdfData=null;
+const PDF_DATA_MARKER='ZEST4CFGDATA::';
+var _gateFile=null;
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}
 
 /* ── Auto attendant ── */
 function updateAAUI(){
@@ -1268,10 +1256,11 @@ function buildOverview(d){
 function downloadPDF(){
   var d=_pdfData;if(!d)return;
   var doc=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  try{doc.setProperties({title:'Phone system setup configuration — '+d.company,subject:'Zest4 phone system configuration',creator:'Zest4 Phone System Setup Configuration Form',keywords:PDF_DATA_MARKER+encodeURIComponent(JSON.stringify(d))});}catch(e){}
   var pw=210,pl=18,pr=18,cw=pw-pl-pr,y=18;
   doc.setFillColor(58,181,74);doc.rect(0,0,210,22,'F');
   doc.setTextColor(255,255,255);doc.setFontSize(14);doc.setFont('helvetica','bold');
-  doc.text('8x8 / Callswitch One — System Setup Configuration',pl,14);
+  doc.text('Phone System Setup Configuration',pl,14);
   doc.setFontSize(8.5);doc.setFont('helvetica','normal');
   doc.text('Generated '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),pw-pr,14,{align:'right'});
   y=30;
@@ -1341,7 +1330,7 @@ function downloadPDF(){
   if(d.callRecording==='yes'){if(y>268){doc.addPage();y=18;}doc.setFillColor(255,251,235);doc.rect(pl,y,cw,12,'F');doc.setDrawColor(245,200,66);doc.rect(pl,y,cw,12,'S');doc.setFontSize(8);doc.setFont('helvetica','bolditalic');doc.setTextColor(122,88,0);var nw=doc.splitTextToSize('Note: Callers must be informed that calls are recorded. Please include a notification in your welcome message, e.g. "Calls may be recorded for training and quality purposes."',cw-6);doc.text(nw,pl+3,y+4.5);y+=Math.max(12,nw.length*4.5)+3;}
   if(d.additionalNotes){y+=3;sectionTitle('Additional Notes');if(y>268){doc.addPage();y=18;}var aw=doc.splitTextToSize(d.additionalNotes,cw-6);doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(28,35,48);doc.text(aw,pl+2,y+4.5);y+=Math.max(8,aw.length*5)+3;}
   var tp=doc.internal.getNumberOfPages();for(var p=1;p<=tp;p++){doc.setPage(p);doc.setFillColor(245,246,248);doc.rect(0,287,210,10,'F');doc.setFontSize(7.5);doc.setTextColor(140,140,140);doc.setFont('helvetica','normal');doc.text('Please email this PDF to ccsupport@zest4.com or attach it to a ticket at www.zest4customers.com',pl,293);doc.text('Page '+p+' of '+tp,pw-pr,293,{align:'right'});}
-  doc.save('8x8-setup-'+d.company.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase()+'.pdf');
+  doc.save('phone-system-setup-'+d.company.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase()+'.pdf');
   var conf=document.getElementById('dlConfirm');conf.style.display='flex';
 }
 
@@ -1349,7 +1338,7 @@ function submitForm(){
   var data=collectData();_pdfData=data;cur=6;
   document.querySelectorAll('.pb').forEach(function(p){p.className='pb done';});
   var el=document.getElementById('emailLink');
-  if(el){el.href='mailto:ccsupport@zest4.com?subject='+encodeURIComponent('8x8/Callswitch One Setup Configuration - '+data.company)+'&body='+encodeURIComponent('Hi CC Support,\n\nPlease find my 8x8/Callswitch One setup configuration attached as a PDF.\n\nKind regards,\n'+data.contact);}
+  if(el){el.href='mailto:ccsupport@zest4.com?subject='+encodeURIComponent('Phone System Setup Configuration - '+data.company)+'&body='+encodeURIComponent('Hi CC Support,\n\nPlease find my phone system setup configuration attached as a PDF.\n\nKind regards,\n'+data.contact);}
   showStep(6);document.getElementById('overviewOut').innerHTML=buildOverview(data);
 }
 
@@ -1367,6 +1356,133 @@ function resetForm(){
 
 document.getElementById('progBar').innerHTML=SNAMES.map(function(_,i){return'<div class="pb'+(i===0?' active':'')+'"></div>';}).join('');
 renderUsers();renderRGs();renderCQs();renderAAs();updateNumType();updateCallerIdUI();updateCallRecUI();showStep(0);
+
+/* ══════════════════════════════════════════ */
+/* UPLOAD GATE — resume from a previously exported PDF */
+/* ══════════════════════════════════════════ */
+function setGateStatus(msg,type){
+  var el=document.getElementById('gateStatus');
+  if(!msg){el.className='gate-status';el.innerHTML='';return;}
+  el.className='gate-status show '+type;el.innerHTML=msg;
+}
+function handleGatePdfSelect(input){
+  var f=input.files&&input.files[0];
+  var loadBtn=document.getElementById('gateLoadBtn');
+  if(!f){_gateFile=null;loadBtn.style.display='none';return;}
+  if(f.type!=='application/pdf'&&!/\.pdf$/i.test(f.name)){
+    setGateStatus('That doesn\'t look like a PDF. Please choose a PDF exported from this form.','error');
+    _gateFile=null;loadBtn.style.display='none';return;
+  }
+  _gateFile=f;
+  document.getElementById('gateDropText').innerHTML='<span class="fname">'+esc(f.name)+'</span> selected';
+  setGateStatus('','info');
+  loadBtn.style.display='flex';
+}
+['dragover','dragleave','drop'].forEach(function(evt){
+  var label=document.getElementById('gateDropLabel');
+  if(!label)return;
+  label.addEventListener(evt,function(e){
+    e.preventDefault();e.stopPropagation();
+    if(evt==='dragover')label.style.borderColor='var(--green)';
+    if(evt==='dragleave')label.style.borderColor='';
+    if(evt==='drop'){
+      label.style.borderColor='';
+      var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+      if(f){var input=document.getElementById('gatePdfInput');
+        try{var dt=new DataTransfer();dt.items.add(f);input.files=dt.files;}catch(err){}
+        handleGatePdfSelect({files:[f]});
+      }
+    }
+  });
+});
+function startNewConfig(){
+  document.getElementById('gateScreen').style.display='none';
+  document.getElementById('formScreen').style.display='block';
+  window.scrollTo(0,0);
+}
+function loadGatePdf(){
+  if(!_gateFile)return;
+  if(!window.pdfjsLib){setGateStatus('PDF reader failed to load. Check your connection and try again.','error');return;}
+  setGateStatus('<i class="ti ti-loader-2"></i> Reading PDF…','loading');
+  document.getElementById('gateLoadBtn').disabled=true;
+  var reader=new FileReader();
+  reader.onload=function(){
+    pdfjsLib.getDocument({data:new Uint8Array(reader.result)}).promise.then(function(pdf){
+      return pdf.getMetadata();
+    }).then(function(meta){
+      var kw=(meta&&meta.info&&meta.info.Keywords)||'';
+      var idx=kw.indexOf(PDF_DATA_MARKER);
+      if(idx===-1){
+        setGateStatus('This PDF doesn\'t contain any saved configuration data — it may not have been exported from this form. You can still start a new configuration below.','error');
+        document.getElementById('gateLoadBtn').disabled=false;
+        return;
+      }
+      var raw=kw.slice(idx+PDF_DATA_MARKER.length);
+      var data;
+      try{data=JSON.parse(decodeURIComponent(raw));}catch(e){data=null;}
+      if(!data){
+        setGateStatus('We found saved data in this PDF but couldn\'t read it. It may be from a different version of this form.','error');
+        document.getElementById('gateLoadBtn').disabled=false;
+        return;
+      }
+      loadFromData(data);
+      setGateStatus('','info');
+      document.getElementById('gateScreen').style.display='none';
+      document.getElementById('formScreen').style.display='block';
+      window.scrollTo(0,0);
+    }).catch(function(){
+      setGateStatus('Couldn\'t read that PDF. Please make sure it\'s a configuration PDF exported from this form.','error');
+      document.getElementById('gateLoadBtn').disabled=false;
+    });
+  };
+  reader.readAsArrayBuffer(_gateFile);
+}
+function loadFromData(d){
+  document.getElementById('companyName').value=d.company||'';
+  document.getElementById('contactName').value=d.contact||'';
+  document.getElementById('contactEmail').value=d.email||'';
+  document.getElementById('voicemailMsg').value=d.voicemailMsg||'';
+  document.getElementById('portNumbers').value=d.portNumbers||'';
+  document.getElementById('currentProvider').value=d.currentProvider||'';
+  document.getElementById('areaCode').value=d.areaCode||'';
+  document.getElementById('numQty').value=d.numQty||'';
+  document.getElementById('callerIdNumber').value=d.callerIdNumber||'';
+  document.getElementById('additionalNotes').value=d.additionalNotes||'';
+
+  ['fw0','fw1','fw2'].forEach(function(id){document.getElementById(id).classList.remove('has-err');});
+
+  var numTypeEl=d.numType&&document.querySelector('input[name="numType"][value="'+d.numType+'"]');
+  if(numTypeEl)numTypeEl.checked=true;
+  var ciEl=d.callerIdYN&&document.querySelector('input[name="callerIdYN"][value="'+d.callerIdYN+'"]');
+  if(ciEl)ciEl.checked=true;
+  var crEl=d.callRecording&&document.querySelector('input[name="callRecYN"][value="'+d.callRecording+'"]');
+  if(crEl)crEl.checked=true;
+  var aaEl=d.aaEnabled&&document.querySelector('input[name="aaEnabled"][value="'+d.aaEnabled+'"]');
+  if(aaEl)aaEl.checked=true;
+
+  users=(d.users||[]).map(function(u){return Object.assign({blfKeyList:[]},u);});
+  rgs=(d.rgs||[]).map(function(rg){return Object.assign({},rg);});
+  cqs=(d.cqs||[]).map(function(cq){return Object.assign({},cq);});
+  aas=(d.aas||[]).map(function(aa){return Object.assign({},aa,{
+    hours:(aa.hours||[]).map(function(h){return Object.assign({},h);}),
+    options:(aa.options||[]).map(function(o){return Object.assign({},o);}),
+    closedOptions:(aa.closedOptions||[]).map(function(o){return Object.assign({},o);})
+  });});
+
+  nextUserId=users.reduce(function(m,u){return Math.max(m,(u.id||0)+1);},1);
+  nextRgId=rgs.reduce(function(m,r){return Math.max(m,(r.id||0)+1);},1);
+  nextCqId=cqs.reduce(function(m,c){return Math.max(m,(c.id||0)+1);},1);
+  nextAaId=aas.reduce(function(m,a){return Math.max(m,(a.id||0)+1);},1);
+  var maxOpt=1;
+  aas.forEach(function(a){(a.options||[]).concat(a.closedOptions||[]).forEach(function(o){if(o.id&&o.id>=maxOpt)maxOpt=o.id+1;});});
+  nextAaOptId=maxOpt;
+
+  renderUsers();renderRGs();renderCQs();renderAAs();
+  updateNumType();updateCallerIdUI();updateCallRecUI();updateAAUI();
+  refreshAllNumberSelects();refreshAADestinationSelects();refreshChips();refreshCQChips();
+  _pdfData=null;
+  cur=0;showStep(0);
+}
 </script>
 </body>
 </html>
