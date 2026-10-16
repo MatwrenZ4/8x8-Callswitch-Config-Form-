@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ── Reset & Base ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -124,6 +125,19 @@ hr{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
 .gate-status.info{background:var(--green-light);color:var(--green-dark);border:1px solid #b6e5bc}
 .gate-status.error{background:#fdecea;color:#b3261e;border:1px solid #f6c6c2}
 .gate-status.loading{background:#eef1f6;color:var(--muted);border:1px solid var(--border2)}
+
+/* ── CLoA notice & modal ── */
+.cloa-notice{display:none;margin-top:14px;background:#fffbeb;border:1px solid #f5c842;border-radius:var(--radius-lg);padding:1rem 1.25rem}
+.cloa-notice.show{display:block}
+.cloa-notice .cn-title{font-size:13px;font-weight:600;color:#7a5800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.cloa-notice p{font-size:13px;color:#5c4000;line-height:1.6}
+.modal-overlay{position:fixed;inset:0;background:rgba(10,16,32,0.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--white);border-radius:var(--radius-lg);max-width:440px;width:100%;padding:1.75rem;box-shadow:0 10px 40px rgba(0,0,0,0.3);text-align:center}
+.modal-box .m-icon{width:52px;height:52px;border-radius:50%;background:#fff3c4;border:2px solid #f5c842;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.modal-box .m-icon i{font-size:26px;color:#7a5800}
+.modal-box h3{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.modal-box p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:1.25rem}
 
 /* ── Steps ── */
 .step{display:none}.step.active{display:block}
@@ -304,9 +318,13 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
       <div class="card-sub">Will you be bringing existing numbers over or getting new ones?</div>
       <label>Number type</label>
       <div class="radio-group">
-        <label class="radio-opt sel" id="ropt-port"><input type="radio" name="numType" value="port" checked onchange="updateNumType()"><i class="ti ti-transfer"></i>Port existing numbers</label>
-        <label class="radio-opt" id="ropt-new"><input type="radio" name="numType" value="new" onchange="updateNumType()"><i class="ti ti-plus-circle"></i>Claim new numbers</label>
-        <label class="radio-opt" id="ropt-both"><input type="radio" name="numType" value="both" onchange="updateNumType()"><i class="ti ti-arrows-exchange"></i>Both</label>
+        <label class="radio-opt sel" id="ropt-port"><input type="radio" name="numType" value="port" checked onchange="updateNumType(true)"><i class="ti ti-transfer"></i>Port existing numbers</label>
+        <label class="radio-opt" id="ropt-new"><input type="radio" name="numType" value="new" onchange="updateNumType(true)"><i class="ti ti-plus-circle"></i>Claim new numbers</label>
+        <label class="radio-opt" id="ropt-both"><input type="radio" name="numType" value="both" onchange="updateNumType(true)"><i class="ti ti-arrows-exchange"></i>Both</label>
+      </div>
+      <div class="cloa-notice" id="cloaNotice">
+        <div class="cn-title"><i class="ti ti-alert-triangle"></i>CLoA form required for porting</div>
+        <p>A <strong>Customer Letter of Authority (CLoA)</strong> form will also need to be provided for the numbers you are porting. Please make sure this is completed and sent to us along with your configuration PDF.</p>
       </div>
       <div id="portSection" style="margin-top:1.25rem">
         <hr style="margin-top:0">
@@ -321,6 +339,19 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
         <input type="text" id="areaCode" placeholder="e.g. 0207 (London), 0161 (Manchester)" style="max-width:340px">
         <label for="numQty">How many numbers do you need?</label>
         <input type="text" id="numQty" placeholder="e.g. 3" style="max-width:120px">
+      </div>
+      <hr>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:7px"><i class="ti ti-bell-ringing" style="color:var(--green)"></i>Alarms &amp; door entry systems</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Do you have any numbers that are used for alarms or door entry systems?</p>
+        <div class="radio-group">
+          <label class="radio-opt" id="alarm-yes-opt"><input type="radio" name="alarmDoorYN" value="yes" onchange="updateAlarmUI()"><i class="ti ti-check"></i>Yes</label>
+          <label class="radio-opt sel" id="alarm-no-opt"><input type="radio" name="alarmDoorYN" value="no" checked onchange="updateAlarmUI()"><i class="ti ti-x"></i>No</label>
+        </div>
+        <div id="alarmNotesWrap" style="display:none;margin-top:12px">
+          <label for="alarmNotes" style="margin-top:0">Additional notes</label>
+          <textarea id="alarmNotes" placeholder="e.g. Which numbers are used for alarms or door entry, what they connect to, and any special requirements..."></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -414,6 +445,43 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
 
       <hr>
 
+      <!-- Contacts upload -->
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:7px"><i class="ti ti-address-book" style="color:var(--green)"></i>Contacts upload</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Do you need contacts to be uploaded to your phone system?</p>
+        <div class="radio-group">
+          <label class="radio-opt" id="ct-yes-opt"><input type="radio" name="contactsYN" value="yes" onchange="updateContactsUI()"><i class="ti ti-check"></i>Yes</label>
+          <label class="radio-opt sel" id="ct-no-opt"><input type="radio" name="contactsYN" value="no" checked onchange="updateContactsUI()"><i class="ti ti-x"></i>No</label>
+        </div>
+        <div id="contactsPlatformWrap" style="display:none;margin-top:14px">
+          <label style="margin-top:0">Is this for 8x8 or CallSwitch One?</label>
+          <div class="radio-group">
+            <label class="radio-opt" id="ctp-8x8-opt"><input type="radio" name="contactsPlatform" value="8x8" onchange="updateContactsPlatformUI(true)"><i class="ti ti-phone"></i>8x8</label>
+            <label class="radio-opt" id="ctp-cso-opt"><input type="radio" name="contactsPlatform" value="callswitch" onchange="updateContactsPlatformUI(true)"><i class="ti ti-phone"></i>CallSwitch One</label>
+          </div>
+          <div class="cloa-notice" id="contacts8x8Notice">
+            <div class="cn-title"><i class="ti ti-alert-triangle"></i>8x8 contacts &amp; deskphones</div>
+            <p>Contacts uploaded in the 8x8 Admin Console are for <strong>8x8 Work users only</strong>. If contacts are required on deskphones, they will need to be <strong>manually uploaded to the phones</strong>, as 8x8 does not officially support LDAP contacts on deskphones.</p>
+          </div>
+          <div id="contactsUploadWrap" style="display:none;margin-top:14px">
+            <div id="contacts8x8Format" class="hint-box" style="display:none;margin-bottom:12px"><i class="ti ti-info-circle"></i><span>For 8x8, contact phone numbers must be in the <strong>+44 format</strong> (e.g. +442079460123) and the contacts must be filled in using <strong>our contacts template</strong>.
+              <a href="#" onclick="downloadContactsTemplate('8x8');return false" style="color:var(--green-dark);font-weight:600;white-space:nowrap"><i class="ti ti-download"></i> Download template (CSV)</a></span></div>
+            <div id="contactsCsoFormat" class="hint-box" style="display:none;margin-bottom:12px"><i class="ti ti-info-circle"></i><span>For CallSwitch One, contacts must be filled in using <strong>our contacts template</strong>.
+              <a href="#" onclick="downloadContactsTemplate('callswitch');return false" style="color:var(--green-dark);font-weight:600;white-space:nowrap"><i class="ti ti-download"></i> Download template (CSV)</a></span></div>
+            <label style="margin-top:0" for="contactsCsvInput">Upload your contacts CSV</label>
+            <label class="file-drop" for="contactsCsvInput" id="contactsDropLabel">
+              <i class="ti ti-cloud-upload"></i>
+              <span id="contactsDropText">Click to choose a CSV file</span>
+            </label>
+            <input type="file" id="contactsCsvInput" accept=".csv,text/csv" style="display:none" onchange="handleContactsFile(this)">
+            <div class="gate-status" id="contactsFileStatus"></div>
+            <p style="font-size:12px;color:var(--muted);margin-top:6px">When you export, this file will be bundled together with your configuration PDF in a single download folder (ZIP).</p>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
       <!-- Additional notes -->
       <div>
         <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:7px"><i class="ti ti-notes" style="color:var(--green)"></i>Additional notes</div>
@@ -445,13 +513,14 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
       <!-- Download PDF -->
       <div style="background:var(--green-light);border:1px solid #b6e5bc;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
         <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-bottom:12px;display:flex;align-items:center;gap:7px"><i class="ti ti-file-download" style="font-size:18px"></i>Step 1 — Download your configuration PDF</div>
-        <button class="btn primary" onclick="downloadPDF()" style="padding:10px 24px"><i class="ti ti-download"></i>Download PDF</button>
-        <div id="dlConfirm" style="display:none;margin-top:10px;font-size:13px;color:var(--green-dark);align-items:center;gap:6px"><i class="ti ti-circle-check"></i> PDF downloaded — now send it to us below.</div>
+        <button class="btn primary" onclick="downloadPDF()" style="padding:10px 24px"><i class="ti ti-download"></i><span id="dlBtnText">Download PDF</span></button>
+        <div id="dlConfirm" style="display:none;margin-top:10px;font-size:13px;color:var(--green-dark);align-items:center;gap:6px"><i class="ti ti-circle-check"></i> <span id="dlConfirmText">PDF downloaded — now send it to us below.</span></div>
       </div>
 
       <!-- Send options -->
       <div style="background:#f3f3ff;border:1px solid #c8c8ec;border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
         <div style="font-size:14px;font-weight:600;color:#3b3b8f;margin-bottom:12px;display:flex;align-items:center;gap:7px"><i class="ti ti-send" style="font-size:18px"></i>Step 2 — Send us the PDF</div>
+        <div id="contactsAttachNote" style="display:none;font-size:13px;color:#3b3b8f;background:#fff;border:1px solid #c8c8ec;border-radius:var(--radius);padding:10px 14px;margin-bottom:10px"><i class="ti ti-paperclip"></i> Your contacts CSV (<strong id="contactsAttachName"></strong>) is bundled with the PDF in the downloaded ZIP folder — send both together.</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <a href="#" id="emailLink" style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #c8c8ec;border-radius:var(--radius);padding:12px 14px;text-decoration:none;color:#3b3b8f;font-size:13px;font-weight:500">
             <i class="ti ti-mail" style="font-size:18px;color:#5b5bcc;flex-shrink:0"></i>
@@ -483,6 +552,26 @@ input[type=time]:disabled,select:disabled{opacity:.38;pointer-events:none}
 </div><!-- /content -->
 
 </div><!-- /formScreen -->
+
+<!-- CLoA pop-up -->
+<div class="modal-overlay" id="cloaModal" onclick="if(event.target===this)closeCloaModal()">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cloaModalTitle">
+    <div class="m-icon"><i class="ti ti-file-certificate"></i></div>
+    <h3 id="cloaModalTitle">CLoA form required</h3>
+    <p>Because you're porting existing numbers, a <strong>Customer Letter of Authority (CLoA)</strong> form will also need to be provided for the numbers being ported.</p>
+    <button class="btn primary" style="justify-content:center;min-width:140px" onclick="closeCloaModal()">OK, understood</button>
+  </div>
+</div>
+
+<!-- 8x8 contacts pop-up -->
+<div class="modal-overlay" id="contacts8x8Modal" onclick="if(event.target===this)close8x8Modal()">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="contacts8x8Title">
+    <div class="m-icon"><i class="ti ti-address-book"></i></div>
+    <h3 id="contacts8x8Title">8x8 contacts &amp; deskphones</h3>
+    <p>Contacts uploaded in the 8x8 Admin Console are for <strong>8x8 Work users only</strong>. If contacts are required on deskphones, they will need to be <strong>manually uploaded to the phones</strong>, as 8x8 does not officially support LDAP contacts on deskphones.</p>
+    <button class="btn primary" style="justify-content:center;min-width:140px" onclick="close8x8Modal()">OK, understood</button>
+  </div>
+</div>
 
 <script>
 const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -1131,7 +1220,114 @@ function renderCQs(){
 
 function updateCallerIdUI(){var v=document.querySelector('input[name="callerIdYN"]:checked').value;document.getElementById('callerIdInput').style.display=v==='yes'?'block':'none';document.getElementById('ci-yes-opt').classList.toggle('sel',v==='yes');document.getElementById('ci-no-opt').classList.toggle('sel',v==='no');}
 function updateCallRecUI(){var v=document.querySelector('input[name="callRecYN"]:checked').value;document.getElementById('callRecNotice').style.display=v==='yes'?'block':'none';document.getElementById('cr-yes-opt').classList.toggle('sel',v==='yes');document.getElementById('cr-no-opt').classList.toggle('sel',v==='no');}
-function updateNumType(){var v=document.querySelector('input[name="numType"]:checked').value;document.getElementById('portSection').style.display=(v==='port'||v==='both')?'block':'none';document.getElementById('newSection').style.display=(v==='new'||v==='both')?'block':'none';['port','new','both'].forEach(function(x){document.getElementById('ropt-'+x).classList.toggle('sel',x===v);});}
+function close8x8Modal(){document.getElementById('contacts8x8Modal').classList.remove('show');}
+function updateContactsUI(){
+  var v=document.querySelector('input[name="contactsYN"]:checked').value;
+  document.getElementById('contactsPlatformWrap').style.display=v==='yes'?'block':'none';
+  document.getElementById('ct-yes-opt').classList.toggle('sel',v==='yes');
+  document.getElementById('ct-no-opt').classList.toggle('sel',v!=='yes');
+  updateContactsPlatformUI();
+}
+function updateContactsPlatformUI(userChanged){
+  var yn=document.querySelector('input[name="contactsYN"]:checked').value;
+  var p=document.querySelector('input[name="contactsPlatform"]:checked');
+  var pv=p?p.value:'';
+  document.getElementById('ctp-8x8-opt').classList.toggle('sel',pv==='8x8');
+  document.getElementById('ctp-cso-opt').classList.toggle('sel',pv==='callswitch');
+  var show=(yn==='yes'&&pv==='8x8');
+  document.getElementById('contacts8x8Notice').classList.toggle('show',show);
+  if(userChanged===true&&show)document.getElementById('contacts8x8Modal').classList.add('show');
+  document.getElementById('contactsUploadWrap').style.display=(yn==='yes'&&pv)?'block':'none';
+  document.getElementById('contacts8x8Format').style.display=(yn==='yes'&&pv==='8x8')?'flex':'none';
+  document.getElementById('contactsCsoFormat').style.display=(yn==='yes'&&pv==='callswitch')?'flex':'none';
+  analyseContacts();
+}
+var _contactsFile=null,_contactsParsed=null,_contactsBlob=null;
+function triggerDownload(blob,name){
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(a.href);},2000);
+}
+const CONTACT_HEADERS=['Contact.FirstName','Contact.LastName','Contact.NickName','Contact.JobTitle','Contact.Department','Contact.Location','Contact.PhoneNumbers','Contact.Emails','Contact.CustomField1','Contact.CustomField2','Contact.CustomField3','Contact.ContactId'];
+const CSO_HEADERS=['First','Last','Company','[Number]mobile','[Email]Work','[Number]Work','[Email]Main','[Number]Mobile'];
+function downloadContactsTemplate(kind){
+  var cso=(kind==='callswitch');
+  var blob=new Blob([(cso?CSO_HEADERS:CONTACT_HEADERS).join(',')+'\n'],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=cso?'PhoneBook template for callswitch.csv':'CONTACTS_TEMPLATE.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,'');
+  var rows=[],row=[],f='',q=false;
+  for(var i=0;i<t.length;i++){
+    var c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);f='';rows.push(row);row=[];}
+    else f+=c;
+  }
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows.filter(function(r){return r.some(function(x){return x.trim()!=='';});});
+}
+function setContactsStatus(msg,type){
+  var el=document.getElementById('contactsFileStatus');
+  if(!msg){el.className='gate-status';el.innerHTML='';return;}
+  el.className='gate-status show '+type;el.innerHTML=msg;
+}
+function handleContactsFile(input){
+  var f=input.files&&input.files[0];
+  if(!f){_contactsFile=null;_contactsParsed=null;_contactsBlob=null;document.getElementById('contactsDropText').textContent='Click to choose a CSV file';setContactsStatus('','info');return;}
+  if(!/\.csv$/i.test(f.name)){
+    input.value='';_contactsFile=null;_contactsParsed=null;_contactsBlob=null;
+    document.getElementById('contactsDropText').textContent='Click to choose a CSV file';
+    setContactsStatus('Please choose a CSV file (.csv).','error');return;
+  }
+  _contactsBlob=f;
+  var reader=new FileReader();
+  reader.onload=function(){
+    _contactsParsed=parseCSV(String(reader.result||''));
+    _contactsFile={name:f.name,rows:Math.max(0,_contactsParsed.length-1)};
+    document.getElementById('contactsDropText').innerHTML='<span class="fname">'+esc(f.name)+'</span> selected';
+    analyseContacts();
+  };
+  reader.onerror=function(){setContactsStatus('Couldn\'t read that file. Please try again.','error');};
+  reader.readAsText(f);
+}
+function analyseContacts(){
+  if(!_contactsFile||!_contactsParsed)return;
+  var p=document.querySelector('input[name="contactsPlatform"]:checked');var pv=p?p.value:'';
+  var warns=[];
+  if(!_contactsParsed.length||_contactsFile.rows===0){warns.push('No contacts were found in this file.');}
+  if(pv==='8x8'&&_contactsParsed.length){
+    var header=_contactsParsed[0].map(function(h){return h.trim();});
+    var missing=CONTACT_HEADERS.filter(function(h){return header.indexOf(h)===-1;});
+    if(missing.length)warns.push('This doesn\'t match our template — missing column'+(missing.length>1?'s':'')+': '+esc(missing.join(', '))+'.');
+    var pi=header.indexOf('Contact.PhoneNumbers');
+    if(pi!==-1){
+      var bad=0;
+      _contactsParsed.slice(1).forEach(function(r){
+        var parts=(r[pi]||'').split(/[;|,]/).map(function(s){return s.trim();}).filter(Boolean);
+        if(parts.some(function(n){return !/^\+44/.test(n);}))bad++;
+      });
+      if(bad)warns.push(bad+' contact'+(bad!==1?'s have':' has')+' a phone number not in the +44 format.');
+    }
+  }
+  if(pv==='callswitch'&&_contactsParsed.length){
+    var cHeader=_contactsParsed[0].map(function(h){return h.trim();});
+    var cMissing=CSO_HEADERS.filter(function(h){return cHeader.indexOf(h)===-1;});
+    if(cMissing.length)warns.push('This doesn\'t match our CallSwitch One template — missing column'+(cMissing.length>1?'s':'')+': '+esc(cMissing.join(', '))+'.');
+  }
+  _contactsFile.warns=warns;
+  var msg='<strong>'+esc(_contactsFile.name)+'</strong> — '+_contactsFile.rows+' contact'+(_contactsFile.rows!==1?'s':'')+' found.';
+  if(warns.length)setContactsStatus(msg+'<br>'+warns.join('<br>'),'error');
+  else setContactsStatus(msg,'info');
+}
+function closeCloaModal(){document.getElementById('cloaModal').classList.remove('show');}
+function updateAlarmUI(){var v=document.querySelector('input[name="alarmDoorYN"]:checked').value;document.getElementById('alarmNotesWrap').style.display=v==='yes'?'block':'none';document.getElementById('alarm-yes-opt').classList.toggle('sel',v==='yes');document.getElementById('alarm-no-opt').classList.toggle('sel',v!=='yes');}
+function updateNumType(userChanged){var v=document.querySelector('input[name="numType"]:checked').value;
+  var needsCloa=(v==='port'||v==='both');
+  document.getElementById('cloaNotice').classList.toggle('show',needsCloa);
+  if(userChanged===true&&needsCloa)document.getElementById('cloaModal').classList.add('show');document.getElementById('portSection').style.display=(v==='port'||v==='both')?'block':'none';document.getElementById('newSection').style.display=(v==='new'||v==='both')?'block':'none';['port','new','both'].forEach(function(x){document.getElementById('ropt-'+x).classList.toggle('sel',x===v);});}
 
 function validateStep(){
   if(cur===0){
@@ -1177,11 +1373,24 @@ function collectData(){
     users:users.slice(),rgs:rgs.slice(),cqs:cqs.slice(),numType:document.querySelector('input[name="numType"]:checked').value,
     portNumbers:document.getElementById('portNumbers').value,currentProvider:document.getElementById('currentProvider').value,
     areaCode:document.getElementById('areaCode').value,numQty:document.getElementById('numQty').value,
+    contactsYN:document.querySelector('input[name="contactsYN"]:checked').value,contactsPlatform:(document.querySelector('input[name="contactsPlatform"]:checked')||{}).value||'',
+    contactsFileName:(document.querySelector('input[name="contactsYN"]:checked').value==='yes'&&document.querySelector('input[name="contactsPlatform"]:checked')&&_contactsFile)?_contactsFile.name:'',
+    contactsFileRows:_contactsFile?_contactsFile.rows:0,
+    alarmDoor:document.querySelector('input[name="alarmDoorYN"]:checked').value,alarmNotes:document.getElementById('alarmNotes').value,
     callerIdYN:document.querySelector('input[name="callerIdYN"]:checked').value,callerIdNumber:document.getElementById('callerIdNumber').value,
     callRecording:document.querySelector('input[name="callRecYN"]:checked').value,additionalNotes:document.getElementById('additionalNotes').value
   };
 }
 
+function contactsPlatformLabel(d){return d.contactsPlatform==='8x8'?'8x8':d.contactsPlatform==='callswitch'?'CallSwitch One':'Platform not specified';}
+function contactsSummary(d){
+  if(d.contactsYN!=='yes')return 'No';
+  var s='Yes – '+contactsPlatformLabel(d);
+  s+='<br>Contacts file: '+(d.contactsFileName?esc(d.contactsFileName)+' ('+d.contactsFileRows+' contact'+(d.contactsFileRows!==1?'s':'')+') — included in the download folder with this PDF':'<span style="color:var(--muted)">None selected</span>');
+  if(d.contactsPlatform==='callswitch')s+='<br><span style="color:var(--muted)">Contacts should be filled in using the CallSwitch One contacts template.</span>';
+  if(d.contactsPlatform==='8x8')s+='<br><span style="color:var(--muted)">Note: 8x8 Admin Console contacts are for 8x8 Work users only. Deskphone contacts must be uploaded manually (8x8 does not officially support LDAP contacts on deskphones). Numbers must be in +44 format using the contacts template.</span>';
+  return s;
+}
 function buildOverview(d){
   var nd={port:'Porting existing numbers',new:'Claiming new numbers',both:'Both porting & new numbers'}[d.numType]||'';
   var aaH;
@@ -1241,6 +1450,8 @@ function buildOverview(d){
   if(d.numType==='port'||d.numType==='both'){numH+='<div class="sum-card"><div class="sum-lbl">Current provider</div><div class="sum-val">'+(esc(d.currentProvider)||'—')+'</div></div>';}
   if(d.numType==='new'||d.numType==='both'){numH+='<div class="sum-card"><div class="sum-lbl">Area code</div><div class="sum-val">'+(esc(d.areaCode)||'—')+'</div></div><div class="sum-card"><div class="sum-lbl">Qty needed</div><div class="sum-val">'+(esc(d.numQty)||'—')+'</div></div>';}
   if(d.numType==='port'||d.numType==='both'){numH+='<div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">Numbers to port</div><div class="sum-val-sm" style="white-space:pre-wrap">'+(esc(d.portNumbers)||'—')+'</div></div>';}
+  numH+='<div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">Alarm / door entry numbers</div><div class="sum-val-sm" style="white-space:pre-wrap">'+(d.alarmDoor==='yes'?(esc(d.alarmNotes)||'<i style="color:var(--muted)">Yes — no notes provided</i>'):'No')+'</div></div>';
+  if(d.numType==='port'||d.numType==='both'){numH+='<div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">CLoA</div><div class="sum-val-sm">A CLoA form must also be provided for the numbers being ported.</div></div>';}
   numH+='</div>';
   return '<div class="ov-section"><div class="ov-title"><i class="ti ti-building"></i>Company &amp; Contact</div><div class="sum-grid"><div class="sum-card"><div class="sum-lbl">Company</div><div class="sum-val">'+esc(d.company)+'</div></div><div class="sum-card"><div class="sum-lbl">Contact</div><div class="sum-val">'+esc(d.contact)+'</div></div><div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">Email</div><div class="sum-val">'+esc(d.email)+'</div></div></div></div>'
     +'<div class="ov-section"><div class="ov-title"><i class="ti ti-device-mobile"></i>Phone Numbers</div>'+numH+'</div>'
@@ -1249,7 +1460,7 @@ function buildOverview(d){
     +'<div class="ov-section"><div class="ov-title"><i class="ti ti-headset"></i>Call Queues ('+d.cqs.length+')</div>'+cqsH+'</div>'
     +'<div class="ov-section"><div class="ov-title"><i class="ti ti-phone-check"></i>Auto Attendants ('+(d.aaEnabled==='yes'?d.aas.length:0)+')</div>'+aaH+'</div>'
     +'<div class="ov-section"><div class="ov-title"><i class="ti ti-microphone"></i>Voicemail</div><div class="sum-grid"><div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">Greeting</div><div class="sum-val-sm">'+(esc(d.voicemailMsg)||'<i style="color:var(--muted)">Not provided</i>')+'</div></div></div></div>'
-    +'<div class="ov-section"><div class="ov-title"><i class="ti ti-settings"></i>Additional Settings</div><div class="sum-grid"><div class="sum-card"><div class="sum-lbl">External caller ID</div><div class="sum-val">'+(d.callerIdYN==='yes'?(esc(d.callerIdNumber)||'Yes (number not specified)'):'No – individual numbers')+'</div></div><div class="sum-card"><div class="sum-lbl">Call recording</div><div class="sum-val">'+(d.callRecording==='yes'?'Yes – all calls recorded':'No recording')+'</div></div></div></div>'
+    +'<div class="ov-section"><div class="ov-title"><i class="ti ti-settings"></i>Additional Settings</div><div class="sum-grid"><div class="sum-card"><div class="sum-lbl">External caller ID</div><div class="sum-val">'+(d.callerIdYN==='yes'?(esc(d.callerIdNumber)||'Yes (number not specified)'):'No – individual numbers')+'</div></div><div class="sum-card"><div class="sum-lbl">Call recording</div><div class="sum-val">'+(d.callRecording==='yes'?'Yes – all calls recorded':'No recording')+'</div></div><div class="sum-card" style="grid-column:1/-1"><div class="sum-lbl">Contacts upload</div><div class="sum-val-sm">'+contactsSummary(d)+'</div></div></div></div>'
     +(d.additionalNotes?'<div class="ov-section"><div class="ov-title"><i class="ti ti-notes"></i>Additional Notes</div><div class="sum-card" style="grid-column:1/-1"><div class="sum-val-sm" style="white-space:pre-wrap">'+esc(d.additionalNotes)+'</div></div></div>':'');
 }
 
@@ -1268,7 +1479,9 @@ function downloadPDF(){
   function row(lbl,val,alt){if(y>272){doc.addPage();y=18;}if(alt){doc.setFillColor(249,250,251);doc.rect(pl,y,cw,6.5,'F');}doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(90,99,120);doc.text(lbl,pl+2,y+4.5);doc.setFont('helvetica','normal');doc.setTextColor(28,35,48);var w=doc.splitTextToSize(String(val||'—'),cw-54);doc.text(w,pl+54,y+4.5);y+=Math.max(6.5,w.length*5);}
   function multiRow(lbl,txt){if(y>266){doc.addPage();y=18;}doc.setFontSize(8.5);doc.setFont('helvetica','bold');doc.setTextColor(90,99,120);doc.text(lbl,pl+2,y+4.5);doc.setFont('helvetica','normal');doc.setTextColor(28,35,48);var w=doc.splitTextToSize(txt,cw-54);doc.text(w,pl+54,y+4.5);y+=Math.max(6.5,w.length*5)+2;}
   sectionTitle('Company & Contact');row('Company',d.company,false);row('Contact name',d.contact,true);row('Contact email',d.email,false);y+=3;
-  sectionTitle('Phone Numbers');var nd={port:'Porting existing numbers',new:'Claiming new numbers',both:'Both porting & new numbers'}[d.numType]||'';row('Type',nd,false);if(d.numType==='port'||d.numType==='both'){row('Current provider',d.currentProvider||'Not provided',true);var nums=(d.portNumbers||'').split('\n').filter(function(n){return n.trim();});multiRow('Numbers to port',nums.length?nums.join('\n'):'None listed');}if(d.numType==='new'||d.numType==='both'){row('Area code',d.areaCode||'Not provided',true);row('Quantity needed',d.numQty||'Not provided',false);}y+=3;
+  sectionTitle('Phone Numbers');var nd={port:'Porting existing numbers',new:'Claiming new numbers',both:'Both porting & new numbers'}[d.numType]||'';row('Type',nd,false);if(d.numType==='port'||d.numType==='both'){row('Current provider',d.currentProvider||'Not provided',true);var nums=(d.portNumbers||'').split('\n').filter(function(n){return n.trim();});multiRow('Numbers to port',nums.length?nums.join('\n'):'None listed');}if(d.numType==='new'||d.numType==='both'){row('Area code',d.areaCode||'Not provided',true);row('Quantity needed',d.numQty||'Not provided',false);}
+  row('Alarm/door entry nos.',d.alarmDoor==='yes'?'Yes':'No',true);if(d.alarmDoor==='yes'){multiRow('Alarm/door notes',d.alarmNotes||'Not provided');}
+  if(d.numType==='port'||d.numType==='both'){row('CLoA','A CLoA form must also be provided for the ported numbers.',false);}y+=3;
   sectionTitle('Users ('+d.users.length+')');if(!d.users.length){row('','No users added.',false);}else{d.users.forEach(function(u,i){
     var bits=[u.em||'No email'];
     if(u.deskphone==='yes'){bits.push('Deskphone: '+(u.phoneModel==='other'?(u.phoneModelOther||'Not specified'):(phoneModelLabel(u.phoneModel)||'Not specified')));}
@@ -1327,11 +1540,24 @@ function downloadPDF(){
   }
   sectionTitle('Voicemail');multiRow('Greeting',d.voicemailMsg||'Not provided');y+=3;
   sectionTitle('Additional Settings');row('External caller ID',d.callerIdYN==='yes'?'Yes – '+(d.callerIdNumber||'not specified'):'No – individual numbers',false);row('Call recording',d.callRecording==='yes'?'Yes – all calls recorded':'No recording',true);
+  row('Contacts upload',d.contactsYN==='yes'?'Yes – '+contactsPlatformLabel(d):'No',false);
+  if(d.contactsYN==='yes'){row('Contacts file',d.contactsFileName?d.contactsFileName+' ('+d.contactsFileRows+' contacts) - supplied alongside this PDF':'None selected',true);}
+  if(d.contactsYN==='yes'&&d.contactsPlatform==='8x8'){multiRow('Contacts note','8x8 Admin Console contacts are for 8x8 Work users only. Deskphone contacts must be uploaded manually as 8x8 does not officially support LDAP contacts on deskphones.');}
   if(d.callRecording==='yes'){if(y>268){doc.addPage();y=18;}doc.setFillColor(255,251,235);doc.rect(pl,y,cw,12,'F');doc.setDrawColor(245,200,66);doc.rect(pl,y,cw,12,'S');doc.setFontSize(8);doc.setFont('helvetica','bolditalic');doc.setTextColor(122,88,0);var nw=doc.splitTextToSize('Note: Callers must be informed that calls are recorded. Please include a notification in your welcome message, e.g. "Calls may be recorded for training and quality purposes."',cw-6);doc.text(nw,pl+3,y+4.5);y+=Math.max(12,nw.length*4.5)+3;}
   if(d.additionalNotes){y+=3;sectionTitle('Additional Notes');if(y>268){doc.addPage();y=18;}var aw=doc.splitTextToSize(d.additionalNotes,cw-6);doc.setFontSize(8.5);doc.setFont('helvetica','normal');doc.setTextColor(28,35,48);doc.text(aw,pl+2,y+4.5);y+=Math.max(8,aw.length*5)+3;}
   var tp=doc.internal.getNumberOfPages();for(var p=1;p<=tp;p++){doc.setPage(p);doc.setFillColor(245,246,248);doc.rect(0,287,210,10,'F');doc.setFontSize(7.5);doc.setTextColor(140,140,140);doc.setFont('helvetica','normal');doc.text('Please email this PDF to ccsupport@zest4.com or attach it to a ticket at www.zest4customers.com',pl,293);doc.text('Page '+p+' of '+tp,pw-pr,293,{align:'right'});}
-  doc.save('phone-system-setup-'+d.company.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase()+'.pdf');
-  var conf=document.getElementById('dlConfirm');conf.style.display='flex';
+  var base='phone-system-setup-'+d.company.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase();
+  var conf=document.getElementById('dlConfirm');
+  if(d.contactsFileName&&_contactsBlob&&window.JSZip){
+    var zip=new JSZip(),folder=zip.folder(base);
+    folder.file(base+'.pdf',doc.output('blob'));
+    folder.file(d.contactsFileName,_contactsBlob);
+    zip.generateAsync({type:'blob'}).then(function(b){triggerDownload(b,base+'.zip');conf.style.display='flex';});
+  }else{
+    doc.save(base+'.pdf');
+    if(d.contactsFileName&&_contactsBlob)triggerDownload(_contactsBlob,d.contactsFileName);
+    conf.style.display='flex';
+  }
 }
 
 function submitForm(){
@@ -1339,19 +1565,30 @@ function submitForm(){
   document.querySelectorAll('.pb').forEach(function(p){p.className='pb done';});
   var el=document.getElementById('emailLink');
   if(el){el.href='mailto:ccsupport@zest4.com?subject='+encodeURIComponent('Phone System Setup Configuration - '+data.company)+'&body='+encodeURIComponent('Hi CC Support,\n\nPlease find my phone system setup configuration attached as a PDF.\n\nKind regards,\n'+data.contact);}
+  document.getElementById('contactsAttachName').textContent=data.contactsFileName||'';
+  document.getElementById('contactsAttachNote').style.display=data.contactsFileName?'block':'none';
+  var hasCsv=!!(data.contactsFileName&&_contactsBlob);
+  document.getElementById('dlBtnText').textContent=hasCsv?'Download PDF + contacts CSV (ZIP folder)':'Download PDF';
+  document.getElementById('dlConfirmText').textContent=hasCsv?'Folder downloaded — unzip it and send us both files below, or attach the ZIP itself.':'PDF downloaded — now send it to us below.';
+  document.getElementById('dlConfirm').style.display='none';
   showStep(6);document.getElementById('overviewOut').innerHTML=buildOverview(data);
 }
 
 function resetForm(){
   cur=0;users=[];rgs=[];cqs=[];aas=[];nextUserId=1;nextRgId=1;nextCqId=1;nextAaId=1;nextAaOptId=1;_pdfData=null;
-  ['companyName','contactName','contactEmail','voicemailMsg','portNumbers','currentProvider','areaCode','numQty','callerIdNumber','additionalNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['companyName','contactName','contactEmail','voicemailMsg','portNumbers','currentProvider','areaCode','numQty','callerIdNumber','additionalNotes','alarmNotes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['fw0','fw1','fw2'].forEach(function(id){document.getElementById(id).classList.remove('has-err');});
   renderUsers();renderRGs();renderCQs();renderAAs();
   document.querySelector('input[name="aaEnabled"][value="no"]').checked=true;
   document.querySelector('input[name="numType"][value="port"]').checked=true;
   document.querySelector('input[name="callerIdYN"][value="yes"]').checked=true;
   document.querySelector('input[name="callRecYN"][value="no"]').checked=true;
-  updateAAUI();updateNumType();updateCallerIdUI();updateCallRecUI();showStep(0);
+  document.querySelector('input[name="alarmDoorYN"][value="no"]').checked=true;
+  document.querySelector('input[name="contactsYN"][value="no"]').checked=true;
+  document.querySelectorAll('input[name="contactsPlatform"]').forEach(function(r){r.checked=false;});
+  document.getElementById('contactsCsvInput').value='';_contactsFile=null;_contactsParsed=null;_contactsBlob=null;
+  document.getElementById('contactsDropText').textContent='Click to choose a CSV file';setContactsStatus('','info');
+  updateAAUI();updateAlarmUI();updateContactsUI();updateNumType();updateCallerIdUI();updateCallRecUI();showStep(0);
 }
 
 document.getElementById('progBar').innerHTML=SNAMES.map(function(_,i){return'<div class="pb'+(i===0?' active':'')+'"></div>';}).join('');
@@ -1448,6 +1685,10 @@ function loadFromData(d){
   document.getElementById('numQty').value=d.numQty||'';
   document.getElementById('callerIdNumber').value=d.callerIdNumber||'';
   document.getElementById('additionalNotes').value=d.additionalNotes||'';
+  document.getElementById('alarmNotes').value=d.alarmNotes||'';
+  var alEl=document.querySelector('input[name="alarmDoorYN"][value="'+(d.alarmDoor==='yes'?'yes':'no')+'"]');if(alEl)alEl.checked=true;
+  var ctEl=document.querySelector('input[name="contactsYN"][value="'+(d.contactsYN==='yes'?'yes':'no')+'"]');if(ctEl)ctEl.checked=true;
+  document.querySelectorAll('input[name="contactsPlatform"]').forEach(function(r){r.checked=(r.value===d.contactsPlatform);});
 
   ['fw0','fw1','fw2'].forEach(function(id){document.getElementById(id).classList.remove('has-err');});
 
@@ -1478,7 +1719,7 @@ function loadFromData(d){
   nextAaOptId=maxOpt;
 
   renderUsers();renderRGs();renderCQs();renderAAs();
-  updateNumType();updateCallerIdUI();updateCallRecUI();updateAAUI();
+  updateNumType();updateAlarmUI();updateContactsUI();updateCallerIdUI();updateCallRecUI();updateAAUI();
   refreshAllNumberSelects();refreshAADestinationSelects();refreshChips();refreshCQChips();
   _pdfData=null;
   cur=0;showStep(0);
